@@ -108,6 +108,7 @@ class SecureMessengerGUI:
         tk.Label(left_panel, text="Users", bg="#f0f0f0").pack(pady=5)
         self.user_listbox = tk.Listbox(left_panel)
         self.user_listbox.pack(fill="both", expand=True, padx=5)
+        self.user_listbox.bind('<Button-1>', self.on_listbox_click)
         tk.Button(left_panel, text="Refresh Users", command=self.refresh_users).pack(pady=5)
         
         # Chat Area
@@ -127,6 +128,19 @@ class SecureMessengerGUI:
         # Poll Loop
         self.root.after(2000, self.poll_messages)
 
+    def on_listbox_click(self, event):
+        """Handle listbox clicks to prevent selecting empty space"""
+        # Get index nearest to the click
+        index = self.user_listbox.nearest(event.y)
+        # Get bounding box of that item: (x, y, width, height)
+        bbox = self.user_listbox.bbox(index)
+        
+        # If no item or click is outside the item's vertical range
+        if not bbox or event.y > bbox[1] + bbox[3]:
+            # Clicked on empty space
+            self.user_listbox.selection_clear(0, tk.END)
+            return "break" # Prevent default selection behavior
+            
     # --- ACTIONS ---
     def browse_image(self):
         filename = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg"), ("All Files", "*.*")])
