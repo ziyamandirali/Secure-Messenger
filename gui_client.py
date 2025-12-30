@@ -145,17 +145,21 @@ class SecureMessengerGUI:
             self.preview_label.config(text="Invalid Image", image="")
 
     def logout(self):
+        # Notify Server
+        if self.connected and self.username:
+            try:
+                self.send_json({'command': 'LOGOUT'})
+                self.receive_json() # Wait for ack (optional but good practice)
+            except:
+                pass
+
         # Reset State
         self.username = None
         self.password_key = None
         self.chat_display.config(state='normal')
         self.chat_display.delete('1.0', tk.END)
         self.chat_display.config(state='disabled')
-        if self.connected:
-             # Ideally notify server? Server detects disconnect on socket close, 
-             # but here we keep socket open... protocol doesn't have explicit LOGOUT command.
-             # We can just switch frame.
-             pass
+        
         self.show_frame(self.login_frame)
 
     def login(self):

@@ -188,6 +188,15 @@ def handle_client(conn, addr):
                         del offline_messages[username]
                 
                 conn.sendall(json.dumps({'status': 'success', 'messages': msgs}).encode('utf-8'))
+
+            elif command == 'LOGOUT':
+                if user_online:
+                   with lock:
+                       if user_online in users:
+                           users[user_online]['online'] = False
+                   print(f"User {user_online} logged out")
+                   user_online = None
+                   conn.sendall(json.dumps({'status': 'success'}).encode('utf-8'))
             
             elif command == 'EXIT':
                 break
