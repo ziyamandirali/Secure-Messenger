@@ -229,16 +229,23 @@ class SecureMessengerGUI:
         resp = self.receive_json()
         if resp and 'users' in resp:
             self.user_listbox.delete(0, tk.END)
-            self.user_listbox.delete(0, tk.END)
             # Sort: Online first, then alphabetical
             sorted_users = sorted(resp['users'], key=lambda x: (not x['online'], x['username']))
             
-            for u in sorted_users:
+            # Re-implementing the loop cleanly
+            valid_users = [u for u in sorted_users if u['username'] != self.username]
+            
+            for index, u in enumerate(valid_users):
                 uname = u['username']
-                if uname != self.username:
-                    status_icon = "🟢" if u['online'] else "🔴"
-                    display_text = f"{status_icon} {uname}"
-                    self.user_listbox.insert(tk.END, display_text)
+                is_online = u['online']
+                
+                # Use standard bullet point
+                display_text = f"● {uname}" 
+                self.user_listbox.insert(tk.END, display_text)
+                
+                # Color the item
+                color = "green" if is_online else "red"
+                self.user_listbox.itemconfig(index, {'fg': color})
 
     def send_message(self):
         selection = self.user_listbox.curselection()
@@ -246,8 +253,7 @@ class SecureMessengerGUI:
             messagebox.showwarning("Select User", "Please select a user to message from the list.")
             return
         target_display = self.user_listbox.get(selection[0])
-        # Strip icon (first 2 chars + space = 3 chars check, but icon is 1 char usually but occupies space)
-        # "🟢 User" -> split by space
+        # Format is "● Username" -> split by space
         target = target_display.split(" ", 1)[1]
         msg = self.msg_entry.get()
         if not msg: return

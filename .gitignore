@@ -4,3 +4,4 @@ __pycache__/
 server_uploads/
 .DS_Store
 server.log
+users.json
