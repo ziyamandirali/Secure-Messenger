@@ -9,6 +9,7 @@ from crypto_utils import extract_data
 HOST = '0.0.0.0'
 PORT = 9999
 UPLOAD_DIR = "server_uploads"
+USER_DB = "users.json"
 
 # Shared State
 users = {} # {username: {'key': des_key, 'online': False}}
@@ -17,6 +18,30 @@ lock = threading.Lock()
 
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
+
+def load_users():
+    """Load users from JSON file on startup."""
+    global users
+    if os.path.exists(USER_DB):
+        try:
+            with open(USER_DB, 'r') as f:
+                data = json.load(f)
+                # Reconstruct users dict, ensuring 'online' is False initially
+                for u, info in data.items():
+                    users[u] = {'key': info['key'], 'online': False}
+            print(f"Loaded {len(users)} users from {USER_DB}.")
+        except Exception as e:
+            print(f"Error loading users: {e}")
+
+def save_users():
+    """Save users to JSON file."""
+    try:
+        data = {u: {'key': users[u]['key']} for u in users}
+        with open(USER_DB, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"Saved users to {USER_DB}.")
+    except Exception as e:
+        print(f"Error saving users: {e}")
 
 def handle_client(conn, addr):
     print(f"New connection from {addr}")
@@ -71,6 +96,7 @@ def handle_client(conn, addr):
                     else:
                         with lock:
                             users[username] = {'key': extracted_key, 'online': True}
+                        save_users() # Save to file
                         user_online = username
                         print(f"User '{username}' registered with key: {extracted_key}")
                         conn.sendall(json.dumps({'status': 'success', 'message': 'Registered successfully'}).encode('utf-8'))
@@ -177,8 +203,14 @@ def handle_client(conn, addr):
         conn.close()
 
 def start_server():
+    load_users() # Load users at start
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((HOST, PORT))
+    try:
+        server.bind((HOST, PORT))
+    except OSError:
+        print(f"Error: Port {PORT} is busy. Is the server already running?")
+        return
+        
     server.listen()
     print(f"Server listening on {HOST}:{PORT}")
     
