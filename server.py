@@ -6,7 +6,7 @@ import shutil
 from crypto_utils import extract_data
 
 # Configuration
-HOST = '127.0.0.1'
+HOST = '0.0.0.0'
 PORT = 9999
 UPLOAD_DIR = "server_uploads"
 
@@ -91,7 +91,8 @@ def handle_client(conn, addr):
 
             elif command == 'LIST_USERS':
                 with lock:
-                    user_list = [u for u in users.keys()]
+                    # Return list of {username: ..., online: ...}
+                    user_list = [{'username': u, 'online': users[u]['online']} for u in users]
                 conn.sendall(json.dumps({'status': 'success', 'users': user_list}).encode('utf-8'))
 
             elif command == 'SEND':

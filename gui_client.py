@@ -105,7 +105,7 @@ class SecureMessengerGUI:
         left_panel = tk.Frame(self.main_frame, width=150, bg="#f0f0f0")
         left_panel.pack(side="left", fill="y")
         
-        tk.Label(left_panel, text="Online Users", bg="#f0f0f0").pack(pady=5)
+        tk.Label(left_panel, text="Users", bg="#f0f0f0").pack(pady=5)
         self.user_listbox = tk.Listbox(left_panel)
         self.user_listbox.pack(fill="both", expand=True, padx=5)
         tk.Button(left_panel, text="Refresh Users", command=self.refresh_users).pack(pady=5)
@@ -229,16 +229,26 @@ class SecureMessengerGUI:
         resp = self.receive_json()
         if resp and 'users' in resp:
             self.user_listbox.delete(0, tk.END)
-            for u in resp['users']:
-                if u != self.username:
-                    self.user_listbox.insert(tk.END, u)
+            self.user_listbox.delete(0, tk.END)
+            # Sort: Online first, then alphabetical
+            sorted_users = sorted(resp['users'], key=lambda x: (not x['online'], x['username']))
+            
+            for u in sorted_users:
+                uname = u['username']
+                if uname != self.username:
+                    status_icon = "🟢" if u['online'] else "🔴"
+                    display_text = f"{status_icon} {uname}"
+                    self.user_listbox.insert(tk.END, display_text)
 
     def send_message(self):
         selection = self.user_listbox.curselection()
         if not selection:
             messagebox.showwarning("Select User", "Please select a user to message from the list.")
             return
-        target = self.user_listbox.get(selection[0])
+        target_display = self.user_listbox.get(selection[0])
+        # Strip icon (first 2 chars + space = 3 chars check, but icon is 1 char usually but occupies space)
+        # "🟢 User" -> split by space
+        target = target_display.split(" ", 1)[1]
         msg = self.msg_entry.get()
         if not msg: return
         
