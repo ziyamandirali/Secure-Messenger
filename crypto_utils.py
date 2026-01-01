@@ -134,29 +134,3 @@ def decrypt_msg(ciphertext_hex, key):
     except Exception as e:
         return f"[Decryption Error]: {e}"
 
-# --- TEST (If run directly) ---
-if __name__ == "__main__":
-    # Test Setup
-    test_img = "test_base.png"
-    if not os.path.exists(test_img):
-        img = Image.new('RGB', (100, 100), color = 'red')
-        img.save(test_img)
-    
-    print("--- Testing Steganography ---")
-    secret = "MySecretPassword123"
-    hide_data(test_img, secret, "test_encoded.png")
-    extracted = extract_data("test_encoded.png")
-    print(f"Original: {secret}")
-    print(f"Extracted: {extracted}")
-    assert secret == extracted
-    
-    print("\n--- Testing DES Encryption ---")
-    msg = "Hello World!"
-    key = "secretkey"
-    enc = encrypt_msg(msg, key)
-    print(f"Encrypted: {enc}")
-    dec = decrypt_msg(enc, key)
-    print(f"Decrypted: {dec}")
-    assert msg == dec
-    
-    print("\nAll Tests Passed!")
