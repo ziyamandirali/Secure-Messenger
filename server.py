@@ -107,11 +107,18 @@ def handle_client(conn, addr):
             elif command == 'LOGIN':
                  # Just set online status if already registered
                  username = request.get('username')
+                 password = request.get('password')
+                 
                  with lock:
                      if username in users:
-                         users[username]['online'] = True
-                         user_online = username
-                         conn.sendall(json.dumps({'status': 'success'}).encode('utf-8'))
+                         stored_key = users[username]['key']
+                         if stored_key == password:
+                             users[username]['online'] = True
+                             user_online = username
+                             print(f"User {username} logged in from {addr}")
+                             conn.sendall(json.dumps({'status': 'success'}).encode('utf-8'))
+                         else:
+                             conn.sendall(json.dumps({'status': 'error', 'message': 'Invalid password'}).encode('utf-8'))
                      else:
                          conn.sendall(json.dumps({'status': 'error', 'message': 'User not found'}).encode('utf-8'))
 

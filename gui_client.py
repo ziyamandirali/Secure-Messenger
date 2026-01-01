@@ -183,7 +183,7 @@ class SecureMessengerGUI:
             messagebox.showwarning("Input", "Username and Password required")
             return
             
-        self.send_json({'command': 'LOGIN', 'username': user})
+        self.send_json({'command': 'LOGIN', 'username': user, 'password': pwd})
         resp = self.receive_json()
         if resp and resp.get('status') == 'success':
             self.username = user
